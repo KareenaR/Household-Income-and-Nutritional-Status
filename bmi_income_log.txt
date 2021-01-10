@@ -1,0 +1,1315 @@
+------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\18575\Desktop\IHDS\Log\bmi_income_log.txt
+  log type:  text
+ opened on:   9 Jan 2021, 18:49:42
+
+. 
+. *****************Running the cleaning do-file******************************
+. 
+. do "$do_file\Cleaning.do"
+
+. /*
+> Name: Kareena Satia
+> Date: 8th January 2021 
+> 
+> Project Title: 
+>                        Household Income and Nutritional Status: 
+>         Testing for a change in the relationship across an Unknown Income Threshold 
+>                                         Using Regression Kink Design and survey data from India  
+> 
+> Steps: 
+> 1. Merging the Individual IHDS 2012 dataset with the Household IHDS 2012 dataset and creating a meas
+> ure of household income   
+> 2. Cleaning the birth history IHDS dataset from 2012 and merging it with the dataset created in (1)
+> 3. Merging the Individual IHDS 2005 dataset with the Household IHDS 2005 dataset and creating a meas
+> ure of household income
+> 4. Merging the 2005 and 2012 dataset created in (2) and (3) to form a panel dataset 
+> 5. Clean the panel dataset and create variables for analysis 
+> */
+. 
+. *****************************************************************************
+. *                      Cleaning IHDS - 2012 Dataset
+. *****************************************************************************
+. clear 
+
+. *Loading the 2012 individual dataset 
+. use "$raw\IHDS-2012\ICPSR_36151\DS0001\36151-0001-Data.dta"
+(India Human Development Survey-II (IHDS-II), 2011-12, Individual)
+
+. 
+. *Sorting the dataset 
+. sort STATEID DISTID PSUID HHID HHSPLITID IDHH 
+
+. 
+. *Merging the 2012 household dataset with individual 2012 dataset 
+. merge m:1 STATEID DISTID PSUID HHID HHSPLITID IDHH using "$raw\IHDS-2012\ICPSR_36151\DS0002\36151-00
+> 02-Data.dta"
+(label SURVEY already defined)
+(label STATEID already defined)
+(label DISTRICT already defined)
+(label ID11 already defined)
+(label ID13 already defined)
+(label GROUPS already defined)
+(label FM1 already defined)
+(label AN1 already defined)
+(label NF1 already defined)
+(label NFBN1 already defined)
+(label NFBN21 already defined)
+(label NFBN41 already defined)
+(label IN11S1 already defined)
+(label IN11S2 already defined)
+(label IN11S3 already defined)
+(label IN11S4 already defined)
+(label IN11S5 already defined)
+(label IN11S6 already defined)
+(label IN11S7 already defined)
+(label IN11S8 already defined)
+(label URBAN2011 already defined)
+(label URBAN4_2011 already defined)
+(label METRO already defined)
+(label METRO6 already defined)
+(label HHEDUC already defined)
+(label HHEDUCM already defined)
+(label HHEDUCF already defined)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                           204,569  (_merge==3)
+    -----------------------------------------
+
+. 
+. drop _merge 
+
+. 
+. *Generating a measure of income for 2012 
+. gen income_2012 = INCSALARY - INCNREGA + INCANIMAL
+(1 missing value generated)
+
+. egen income_2012_own = rsum(income_2012 INCCROP INCBUS), missing
+(1 missing value generated)
+
+. drop income_2012
+
+. 
+. tempfile i1 
+
+. save `i1'
+file C:\Users\18575\AppData\Local\Temp\ST_400c_000001.tmp saved
+
+. 
+. 
+. *****************************************************************************
+. *                 Cleaning Birth History - 2012 Dataset
+. *****************************************************************************
+. 
+. *Loading the birth history dataset 
+. use "$raw\IHDS-2012\ICPSR_36151\DS0004\36151-0004-Data.dta"
+(India Human Development Survey-II (IHDS-II), 2011-12, Birth History)
+
+. 
+. *Renaming variables
+. rename BH1 birth_id 
+
+. rename BH2 PERSONID     
+
+. 
+. *Generating birth order variable 
+. gen birth_order = birth_id 
+
+. replace birth_order = 3 if birth_id >= 3 & birth_id != . 
+(23,704 real changes made)
+
+. label var birth_order "Birth Order"
+
+. 
+. *Dropping duplicate observations 
+. bysort STATEID DISTID PSUID HHID HHSPLITID PERSONID : gen freq = _n
+
+. keep if freq == 1 
+(16,937 observations deleted)
+
+. 
+. *Sorting the dataset
+. sort STATEID DISTID PSUID HHID HHSPLITID PERSONID 
+
+. 
+. *Merging the birth history dataset of 2012 with the merged Individual and Household dataset of 2012 
+. merge 1:1 STATEID DISTID PSUID HHID HHSPLITID PERSONID using `i1'
+(label SURVEY already defined)
+(label STATEID already defined)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                       140,619
+        from master                    15,153  (_merge==1)
+        from using                    125,466  (_merge==2)
+
+    matched                            79,103  (_merge==3)
+    -----------------------------------------
+
+. 
+. drop _merge 
+
+. 
+. save "$final\2012_Final.dta", replace 
+file C:\Users\18575\Desktop\IHDS\Final_Data\2012_Final.dta saved
+
+. 
+. 
+. *****************************************************************************
+. *                       Cleaning IHDS - 2005 Dataset
+. *****************************************************************************
+. 
+. *Loading 2005 individual dataset 
+. use "$raw\IHDS-2005\ICPSR_22626\DS0001\22626-0001-Data.dta"
+(India Human Development Survey (IHDS), 2005, Individual)
+
+. 
+. sort STATEID DISTID PSUID HHID HHSPLITID IDHH
+
+. 
+. *Merging individual dataset with household dataset 
+. merge m:1 STATEID DISTID PSUID HHID HHSPLITID IDHH using "$raw\IHDS-2005\ICPSR_22626\DS0002\22626-00
+> 02-Data.dta"
+(note: variable PCPL was float, now double to accommodate using data's values)
+(label STATEID already defined)
+(label STATEID2 already defined)
+(label DISTNAME already defined)
+(label URBAN already defined)
+(label METRO6 already defined)
+(label COPC already defined)
+(label GROUPS8 already defined)
+(label HHED5ADULT already defined)
+(label HHED5F already defined)
+(label HHED5M already defined)
+(label POOR already defined)
+(label HC9 already defined)
+(label FM31 already defined)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                             0
+    matched                           215,754  (_merge==3)
+    -----------------------------------------
+
+. 
+. drop _merge 
+
+. 
+. *Generating a measure of income for 2005 
+. gen income_2005 = INCWAGE + INCFARM + INCBUS + INCANIMALS
+(3 missing values generated)
+
+. gen survey_year = 2005 
+
+. 
+. *To make the income in 2005 comparable to 2012, correcting income in rural areas
+. *by CPI for agricultural wage labor and for urban areas by CPI for industrial workers 
+. gen income_2005_def = (income_2005*195)/112.311 if URBAN == 1
+(143,374 missing values generated)
+
+. replace income_2005_def = (income_2005*622)/342 if URBAN == 0 
+(143,371 real changes made)
+
+. 
+. *Saving the final 2005 dataset 
+. save "$final\2005_Final.dta", replace 
+file C:\Users\18575\Desktop\IHDS\Final_Data\2005_Final.dta saved
+
+. 
+. 
+. *****************************************************************************
+. *          Merging IHDS - 2005 and IHDS - 2012 Dataset
+. *****************************************************************************
+. 
+. *Using a linking file to merge Round1 and Round2 datasets 
+. use "$raw\linkind_1 (1).dta"
+(Linking variables hhid2005, hhsplitid2005 and pid2005 to link to 2005 persons)
+
+. 
+. sort STATEID DISTID PSUID HHID HHSPLITID PERSONID 
+
+. 
+. *Merging the linking file with 2012 final dataset 
+. merge 1:1 STATEID DISTID PSUID HHID HHSPLITID PERSONID using "$final\2012_Final.dta"
+(note: variable STATEID was byte, now int to accommodate using data's values)
+(note: variable DISTID was byte, now int to accommodate using data's values)
+(note: variable PSUID was byte, now int to accommodate using data's values)
+(note: variable HHSPLITID was byte, now int to accommodate using data's values)
+(note: variable PERSONID was byte, now int to accommodate using data's values)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                        15,154
+        from master                         0  (_merge==1)
+        from using                     15,154  (_merge==2)
+
+    matched                           204,568  (_merge==3)
+    -----------------------------------------
+
+. 
+. drop _merge 
+
+. 
+. sort STATEID DISTID PSUID HHID2005 HHSPLITID2005 
+
+. 
+. tempfile i2
+
+. save `i2'
+file C:\Users\18575\AppData\Local\Temp\ST_400c_000002.tmp saved
+
+. 
+. *Loading the 2005 final dataset 
+. use "$final\2005_Final.dta"
+(India Human Development Survey (IHDS), 2005, Individual)
+
+. 
+. *Renaming variables 
+. rename HHID HHID2005 
+
+. rename HHSPLITID HHSPLITID2005 
+
+. rename PERSONID PERSONID2005 
+
+. 
+. keep STATEID DISTID PSUID HHID2005 HHSPLITID2005 PERSONID2005 income_2005_def 
+
+. sort STATEID DISTID PSUID HHID2005 HHSPLITID2005 PERSONID2005 
+
+. 
+. *Merging the 2005 final dataset with the 2012 dataset 
+. merge 1:m STATEID DISTID PSUID HHID2005 HHSPLITID2005 PERSONID2005 using `i2', gen(_mergeR1R2) force
+(label RO3 already defined)
+(label RO4 already defined)
+(label RO6 already defined)
+(label RO7 already defined)
+(label RO8 already defined)
+(label RO9 already defined)
+(label WKFARM already defined)
+(label AN6 already defined)
+(label NF9 already defined)
+(label ED2 already defined)
+(label ED3 already defined)
+(label ED4 already defined)
+(label ED5 already defined)
+(label ED6 already defined)
+(label ED7 already defined)
+(label ED9 already defined)
+(label ED10 already defined)
+(label ED11 already defined)
+(label ED12 already defined)
+(label TA3 already defined)
+(label TA5 already defined)
+(label TA6 already defined)
+(label CS3 already defined)
+(label CS4 already defined)
+(label CS6 already defined)
+(label CS7 already defined)
+(label CS8 already defined)
+(label CS9 already defined)
+(label CS17 already defined)
+(label CS18 already defined)
+(label CS19 already defined)
+(label CS20 already defined)
+(label CH2 already defined)
+(label CH5 already defined)
+(label CH6 already defined)
+(label CH7 already defined)
+(label CH8 already defined)
+(label CH9 already defined)
+(label CH10 already defined)
+(label CH12 already defined)
+(label CH13 already defined)
+(label CH18 already defined)
+(label CH19 already defined)
+(label CH20 already defined)
+(label SM4 already defined)
+(label SM5 already defined)
+(label SM6 already defined)
+(label SM7 already defined)
+(label SM8 already defined)
+(label SM9 already defined)
+(label SM10 already defined)
+(label SM16 already defined)
+(label SM19 already defined)
+(label MB3 already defined)
+(label MB4 already defined)
+(label MB5 already defined)
+(label MB6 already defined)
+(label MB7 already defined)
+(label MB8 already defined)
+(label MB9 already defined)
+(label MB10 already defined)
+(label MB11 already defined)
+(label MB12 already defined)
+(label MB13 already defined)
+(label MB14 already defined)
+(label MB15 already defined)
+(label MB16 already defined)
+(label MB17 already defined)
+(label MB23 already defined)
+(label AD3 already defined)
+(label AD4 already defined)
+(label AD5 already defined)
+(label AD6 already defined)
+(label AD7 already defined)
+(label AD8 already defined)
+(label TO3 already defined)
+(label TO4 already defined)
+(label AP2 already defined)
+(label METRO6 already defined)
+(label ID13 already defined)
+(label WKANIMAL already defined)
+(label WKBUSINESS already defined)
+(label WKNONAG already defined)
+(label WKSALARY already defined)
+(label ID14 already defined)
+(label ID15 already defined)
+(label ID16 already defined)
+(label ID17 already defined)
+(label NF1A already defined)
+(label NF1B already defined)
+(label NF2 already defined)
+(label NF7 already defined)
+(label NF8 already defined)
+(label NF22 already defined)
+(label NF27 already defined)
+(label IN17 already defined)
+(label RC1 already defined)
+(label RC1D already defined)
+(label RC2 already defined)
+(label RC4 already defined)
+(label MM1C already defined)
+(label MM2C already defined)
+(label MM3C already defined)
+(label MM4C already defined)
+(label CO1B already defined)
+(label CO2B already defined)
+(label CO3B already defined)
+(label CO4B already defined)
+(label CO5B already defined)
+(label CO6B already defined)
+(label CO7B already defined)
+(label CO8B already defined)
+(label CO9B already defined)
+(label CO10B already defined)
+(label CO11B already defined)
+(label CO12B already defined)
+(label CO13B already defined)
+(label CO14B already defined)
+(label POOR already defined)
+(label CG1 already defined)
+(label CG2 already defined)
+(label CG3 already defined)
+(label CG4 already defined)
+(label CG5 already defined)
+(label CG6 already defined)
+(label CG7 already defined)
+(label CG8 already defined)
+(label CG9 already defined)
+(label CG10 already defined)
+(label CG11 already defined)
+(label CG12 already defined)
+(label CG13 already defined)
+(label CG14 already defined)
+(label CG15 already defined)
+(label CG16 already defined)
+(label CG17 already defined)
+(label CG18 already defined)
+(label CG19 already defined)
+(label CG20 already defined)
+(label CG21 already defined)
+(label CG22 already defined)
+(label CG23 already defined)
+(label CG24 already defined)
+(label DB1 already defined)
+(label DB2C already defined)
+(label DB2D already defined)
+(label DB6 already defined)
+(label ME1 already defined)
+(label ME2 already defined)
+(label ME3 already defined)
+(label ME4 already defined)
+(label ME5 already defined)
+(label ME6 already defined)
+(label ME7 already defined)
+(label ME8 already defined)
+(label ME9 already defined)
+(label ME10 already defined)
+(label ME11 already defined)
+(label ME12 already defined)
+(label TR1 already defined)
+(label TR2 already defined)
+(label TR3 already defined)
+(label LC1 already defined)
+(label LC2 already defined)
+(label LC3 already defined)
+(label LC4 already defined)
+(label CI1 already defined)
+(label CI2 already defined)
+(label CI3 already defined)
+(label CI4 already defined)
+(label CI5 already defined)
+(label CI6 already defined)
+(label CI7 already defined)
+(label CI8 already defined)
+(label CI9 already defined)
+(label CI10 already defined)
+(label OH3 already defined)
+(label OH4 already defined)
+(label OH5 already defined)
+(label OH6 already defined)
+(label OH7 already defined)
+(label OH8 already defined)
+(label OH9 already defined)
+(label WA2A already defined)
+(label WA7 already defined)
+(label WA8 already defined)
+(label SA2 already defined)
+(label SA2A already defined)
+(label SA3 already defined)
+(label SA4 already defined)
+(label SA5 already defined)
+(label SA6 already defined)
+(label SA6A already defined)
+(label FU1 already defined)
+(label FU1B already defined)
+(label FU3 already defined)
+(label FU4 already defined)
+(label FU5A already defined)
+(label FU6 already defined)
+(label FU7 already defined)
+(label FU7A already defined)
+(label FU8 already defined)
+(label FU8A already defined)
+(label FU9 already defined)
+(label FU9A already defined)
+(label FU10 already defined)
+(label FU10A already defined)
+(label QC1 already defined)
+(label QC2 already defined)
+(label QC3 already defined)
+(label QC4 already defined)
+(label QC6 already defined)
+(label QC7 already defined)
+(label HQ1 already defined)
+(label HQ2A already defined)
+(label HQ2B already defined)
+(label HQ3 already defined)
+(label HQ4 already defined)
+(label HQ5 already defined)
+(label HQ6 already defined)
+(label OG1 already defined)
+(label OG2 already defined)
+(label OG3 already defined)
+(label OG4 already defined)
+(label OG5 already defined)
+(label OG6 already defined)
+(label OG7 already defined)
+
+    Result                           # of obs.
+    -----------------------------------------
+    not matched                       133,500
+        from master                    64,766  (_mergeR1R2==1)
+        from using                     68,734  (_mergeR1R2==2)
+
+    matched                           150,988  (_mergeR1R2==3)
+    -----------------------------------------
+
+. 
+. drop _merge 
+
+. 
+. sort STATEID DISTID PSUID HHID HHSPLITID 
+
+. 
+. *Saving the final dataset together 
+. save "$final\merged_all.dta", replace
+file C:\Users\18575\Desktop\IHDS\Final_Data\merged_all.dta saved
+
+. 
+. use "$final\merged_all.dta", clear 
+(India Human Development Survey (IHDS), 2005, Individual)
+
+. 
+. 
+. *****************************************************************************
+. *                       Cleaning the entire dataset
+. *****************************************************************************
+. 
+. *Creating a measure of income 
+. gen avg_income = (income_2005_def + income_2012_own)/2 //average income in 2005 and 2012 for consump
+> tion smoothing 
+(133,503 missing values generated)
+
+. gen avg_income_1000 = avg_income/1000   // generating income in thousands 
+(133,503 missing values generated)
+
+. gen mon_income = avg_income_1000/12     // generating monthly income 
+(133,503 missing values generated)
+
+. 
+. gen ln_income = ln(mon_income) if mon_income != . & mon_income != .  // taking log of monthly income
+(136,665 missing values generated)
+
+. replace ln_income = . if ln_income < 0 | ln_income == . 
+(12,614 real changes made, 12,614 to missing)
+
+. replace ln_income = . if ln_income > 4 
+(1,548 real changes made, 1,548 to missing)
+
+. 
+. *Graph of household income distribution 
+. kdensity ln_income, color(blue) xline(1.8, lcolor(red) lpattern(dash)) xtitle("log household income"
+> ) ytitle(density) title("") plotr(fcolor(white))
+
+. graph export "$outcomes\incomedist.png", replace   // the dotted red line shows the median household
+>  income
+(file C:\Users\18575\Desktop\IHDS\Output\incomedist.png written in PNG format)
+
+. gr export "$outcomes/bmi_income.eps", as(eps) preview(off) replace
+(file C:\Users\18575\Desktop\IHDS\Output/bmi_income.eps written in EPS format)
+
+. !epstopdf "$outcomes/bmi_income.eps"
+
+. 
+. *Renaming variables 
+. rename RO5 age
+
+. rename MB5 high_blood_pressure 
+
+. rename MB6 heart_disease 
+
+. rename MB7 diabetes 
+
+. rename RO3 sex  
+
+. 
+. *Correcting for miscoding of variables 
+. replace age = . if age == 98 | age == 99 | age == 95
+(141 real changes made, 141 to missing)
+
+. 
+. *Creating different specifications of the variable age 
+. gen age2 = age^2 
+(80,064 missing values generated)
+
+. gen age3 = age^3
+(80,064 missing values generated)
+
+. label var age2 "Age squared"
+
+. label var age3 "Age cubed"
+
+. 
+. *Creating three different categories of age groups 
+. gen child = 0 
+
+. replace child = 1 if age < 5   // Age group: 0-5 
+(17,025 real changes made)
+
+. 
+. gen child2 = 0 
+
+. replace child2 = 1 if age > 5 & age < 19  // Age group: 5-19
+(51,399 real changes made)
+
+. 
+. gen adults = 0 
+
+. replace adults = 1 if age > 19 // Age greater than 19 
+(207,849 real changes made)
+
+. 
+. *Creating a measure of height (average of the first two rounds) in metres 
+. gen height_final = (AP5 + AP6)/2
+(147,802 missing values generated)
+
+. gen height_m = height_final/100
+(147,802 missing values generated)
+
+. gen height_m2 = height_m^2      // Squaring the height variable 
+(147,802 missing values generated)
+
+. 
+. *Creating a measure of weights in kgs (average of the first two rounds)
+. gen weight_final = (AP8 + AP9)/2
+(147,537 missing values generated)
+
+. 
+. *Generating body mass index for adults and discarding those observations with a bmi of over 40 and l
+> ess than 10  
+. gen bmi = 0 
+
+. replace bmi = weight_final/height_m2 if adults == 1
+(207,849 real changes made, 130,263 to missing)
+
+. replace bmi = . if bmi == 0
+(76,639 real changes made, 76,639 to missing)
+
+. replace bmi = . if bmi > 40
+(340 real changes made, 340 to missing)
+
+. replace bmi = . if bmi < 10 
+(43 real changes made, 43 to missing)
+
+. kdensity bmi, color(blue) xtitle("BMI") ytitle("density") title("") plotr(fcolor(white)) xline(18.5,
+>  lcolor(black) lpattern(dash))
+
+. gr export "$outcomes/bmi_income_1.eps", as(eps) preview(off) replace
+(file C:\Users\18575\Desktop\IHDS\Output/bmi_income_1.eps written in EPS format)
+
+. !epstopdf "$outcomes/bmi_income_1.eps"
+
+. 
+. *Height-for-age for children between 0-5: average = 110 
+. *Height-for-age for children between 5-19: average = 176.5 
+. twoway kdensity height_final if child == 1 || kdensity height_final if child2 == 1, xtitle("height")
+>  ytitle("density") legend(label (1 "0-59 months") label (2 "5-19 years")) title("") plotr(fcolor(whi
+> te)) xline(162.8, lcolor(black) lpattern(dash)) xline(100.7, lcolor(black) lpattern(dash))
+
+. gr export "$outcomes/bmi_income_2.eps", as(eps) preview(off) replace
+(file C:\Users\18575\Desktop\IHDS\Output/bmi_income_2.eps written in EPS format)
+
+. !epstopdf "$outcomes/bmi_income_2.eps"
+
+. 
+. *Generating indicators for major morbidity disease 
+. gen indicator = 1 if high_blood_pressure == 1 | heart_disease == 1 | diabetes == 1 | high_blood_pres
+> sure == 2 | heart_disease == 2 | diabetes == 2
+(275,094 missing values generated)
+
+. replace indicator = 0 if high_blood_pressure == 0 | heart_disease == 0 | diabetes == 0
+(204,379 real changes made)
+
+. 
+. save "$final\analysis.dta", replace
+(note: file C:\Users\18575\Desktop\IHDS\Final_Data\analysis.dta not found)
+file C:\Users\18575\Desktop\IHDS\Final_Data\analysis.dta saved
+
+. 
+. 
+end of do-file
+
+. 
+. *****************Running the analysis do-file******************************
+. 
+. do "$do_file\Analysis.do"
+
+. /* 
+> Name: Kareena Satia
+> Date: 8th January 2021 
+> 
+> Project Title: 
+>                      Household Income and Nutritional Status: 
+>                         Testing for a change in the relationship across an Unknown Income Threshold 
+>                                         Using Regression Kink Design and survey data from India 
+> 
+> File Purpose: This file contains data analysis. 
+> 
+> Steps: 
+> 1. Testing for slope change by running a loop containing regressions, calculating the F-type statist
+> ic and find the income threshold where the F-type statistic is minimized 
+> 2. Using the income threshold found in (6) to estimate the regression of BMI on income and finding t
+> he slope change 
+> 3. For robustness, I test for slope change by running a loop containing regression of height (an alt
+> ernative nutritional measure) on income 
+> 
+> */
+. *****************************************************************************
+. *                       Data Analysis 
+. *****************************************************************************
+. 
+. /* Running a loop to calculate the income threshold where there is a slope change in the relationshi
+> p 
+> *between bmi and income  
+> 
+> Steps:
+> 1. Running piecewise linear regressions to examine the relationship between BMI and income above and
+>  below the threshold 
+> 2. The first regression only runs on observations where the ln_income >= threshold value 
+> 3. The second regression runs on observatiosn where the ln_income < threshold 
+> 4. I insert the sum of squares of residuals from the two regressions into the matrix and add them up
+>  
+> 5. I insert the number of observations in the two regressions and add them up 
+> 6. I find the minimum sum of squared residuals across different threshold incomes 
+> 7. I use the minimum sum of squared residuls to calculate the F-type statistic : n*(rss_i - rss_min)
+> /rss_min 
+> 8. I plot the F-type statistic against the income threshols to look for a pattern where the F-type s
+> tatistic increases as it moves away from the income 
+>    threshold with the lowest sum of squared residuals 
+> 
+> My regression specification is: bmi = beta_0 + beta_1*(ln_income) + beta_2*(ln_income - threshold) +
+>  beta_3*(X'_i) + e 
+> 
+> */ 
+. clear 
+
+. 
+. use "$final\analysis.dta", clear 
+(India Human Development Survey (IHDS), 2005, Individual)
+
+. 
+. local threshold = 0.05    // Starting with a lower threshold and then moving up 
+
+. local row = 1             // Stating a counter of row = 1
+
+. local minrss = 0            // Creating a variable minrss 
+
+. matrix A = J(70,7,.)       // Creating an empty matrix of 70 rows and 8 columns
+
+. 
+. while `threshold' <= 3.50 {    
+  2.                       
+.         gen inc`row' = (ln_income - `threshold')   // Generating variable with the difference betwee
+> n ln_income and threshold
+  3.         matrix A[`row', 1] = `threshold'    // Inserting threshold values
+  4.         
+.         qui reg bmi ln_income inc`row' sex age age2 age3 URBAN2011 i.ID13 i.DISTID if adults == 1 & 
+> inc`row' >= 0 // Running a regression with only obs with ln_income >= threshold 
+  5.         matrix A[`row',2] = e(rss)          // Inserting sum of squared residuals
+  6.         matrix A[`row',3] = e(N)            // Inserting the number of observations 
+  7.         
+.         qui reg bmi ln_income inc`row' sex age age2 age3 URBAN2011 i.ID13 i.DISTID if adults == 1 & 
+> inc`row' < 0 // Running a separate regression with only obs with ln_income < threshold
+  8.         matrix A[`row',4] = e(rss)          // Inserting sum of squared residuals 
+  9.         matrix A[`row',5] = e(N)            // Inserting the number of observations 
+ 10.         
+.         matrix A[`row',6] = A[`row',2] + A[`row',4]   // Total sum of squared residuals from two reg
+> ressions 
+ 11.         matrix A[`row',7] = A[`row',3] + A[`row',5]   // Total number of observations from two re
+> gressions 
+ 12.         
+.         if `row' == 1 {                         // Stating the first sum of squared residuals as the
+>  minimum 
+ 13.                 local minrss = A[`row',6] 
+ 14.         }
+ 15.         
+.         else {                                 // for every other row, I run a check 
+ 16.                 if A[`row',6] < `minrss' {         // whether the rss is less than the first one,
+>  
+ 17.                         local minrss = A[`row',6]      // if it is, then I state that as the lowe
+> st one 
+ 18.                 }
+ 19.         }
+ 20.         
+.         local threshold = `threshold' + 0.05  // Increasing the threshold value consistently by 0.05
+ 21.         local row = `row' + 1                 // Increasing the value of row by 1 
+ 22. }
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+
+. 
+. matrix min_rss = J(70,1,`minrss')         // Creating a matrix of 70 rows and 1 column with minimum 
+> rss 
+
+. mat C = diag(A[1...,7]) * (A[1...,6] - min_rss) * (1/`minrss')  // Generating the F-type statistic (
+> rss_i - min_rss)/min_rss
+
+. mat A = A, C        // Adding matrix C to matrix A 
+
+. 
+. // The income threshold at which the F-type statistic minimizes is 1.65 
+. 
+. *Transforming the matrix into variables 
+. svmat A
+
+. 
+. *Renaming variables created from matrix A 
+. rename A8 ftype 
+
+. rename A1 thresholds
+
+. 
+. *Graph displaying the relationship of the F-type statistic and income threshold values 
+. line ftype thresholds, title("") xtitle("income threshold") ytitle("F-type statistic") lcolor(blue) 
+> plotr(fcolor(white))
+
+. gr export "$outcomes/bmi_income_3.eps", as(eps) preview(off) replace
+(file C:\Users\18575\Desktop\IHDS\Output/bmi_income_3.eps written in EPS format)
+
+. !epstopdf "$outcomes/bmi_income_3.eps"           // Line displays a U shaped relationship: wherein t
+> he F-type statistic keeps 
+
+.                                                                         //      increasing on both s
+> ides as it moves away from the income threshold at which the F-type statistic is minimized  
+. 
+. *Generating a dummy for income values greater than the threshold 
+. gen knot = 1 if ln_income >= 1.65 
+(68,805 missing values generated)
+
+. replace knot = 0 if ln_income < 1.65 & ln_income != .
+(68,805 real changes made)
+
+. 
+. *Generating a variable with an interaction between the dummy and ln_income which measures the slope 
+> change 
+. gen diff = ln_income - 1.65 
+(150,827 missing values generated)
+
+. gen diffXknot = knot*diff
+(150,827 missing values generated)
+
+.  
+. *Running a piecewise linear regression with the break at income threshold value of 1.65 
+. reg bmi ln_income diffXknot sex age age2 age3 URBAN2011 i.ID13 i.DISTID if adults == 1
+
+      Source |       SS           df       MS      Number of obs   =    56,434
+-------------+----------------------------------   F(72, 56361)    =    137.34
+       Model |  150415.688        72  2089.10678   Prob > F        =    0.0000
+    Residual |  857291.558    56,361   15.210723   R-squared       =    0.1493
+-------------+----------------------------------   Adj R-squared   =    0.1482
+       Total |  1007707.25    56,433  17.8567017   Root MSE        =    3.9001
+
+------------------------------------------------------------------------------
+         bmi |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+   ln_income |   .6788329   .0403883    16.81   0.000     .5996716    .7579943
+   diffXknot |   .3124687   .0660665     4.73   0.000     .1829779    .4419594
+         sex |   .3584115   .0339063    10.57   0.000     .2919548    .4248681
+         age |   .4579903   .0267036    17.15   0.000     .4056511    .5103294
+        age2 |  -.0070322   .0005732   -12.27   0.000    -.0081558   -.0059086
+        age3 |   .0000306   3.88e-06     7.88   0.000      .000023    .0000382
+   URBAN2011 |   1.604134    .037628    42.63   0.000     1.530383    1.677885
+             |
+        ID13 |
+        OBC  |  -.3185538   .0811877    -3.92   0.000    -.4776821   -.1594255
+         SC  |   -.772805   .0783976    -9.86   0.000    -.9264648   -.6191452
+         ST  |  -1.090639   .0834617   -13.07   0.000    -1.254224   -.9270532
+      Other  |    -1.6319   .0970932   -16.81   0.000    -1.822203   -1.441597
+          6  |   .3954431   .1636884     2.42   0.016     .0746129    .7162733
+             |
+      DISTID |
+          1  |  -.1570638    .131331    -1.20   0.232    -.4144734    .1003458
+          2  |  -.3381666   .1190958    -2.84   0.005    -.5715951   -.1047381
+          3  |  -.5234971    .143349    -3.65   0.000     -.804462   -.2425321
+          4  |  -.9066005   .1326862    -6.83   0.000    -1.166666   -.6465348
+          5  |  -.4092972   .1209993    -3.38   0.001    -.6464566   -.1721378
+          6  |  -.7086513   .1297762    -5.46   0.000    -.9630135   -.4542891
+          7  |  -.7079954   .1317578    -5.37   0.000    -.9662414   -.4497493
+          8  |  -.5111802   .1295429    -3.95   0.000    -.7650851   -.2572752
+          9  |  -.8559597   .1288143    -6.64   0.000    -1.108437   -.6034829
+         10  |  -.4006855   .1246782    -3.21   0.001    -.6450556   -.1563154
+         11  |  -.2621189   .1335791    -1.96   0.050    -.5239347   -.0003031
+         12  |  -.4530988   .1233813    -3.67   0.000    -.6949268   -.2112707
+         13  |   -.851216   .1299148    -6.55   0.000     -1.10585   -.5965822
+         14  |  -.7488635    .139957    -5.35   0.000     -1.02318   -.4745469
+         15  |  -.5545864   .1329497    -4.17   0.000    -.8151687   -.2940041
+         16  |  -.1558203   .1425895    -1.09   0.274    -.4352966    .1236561
+         17  |  -.3780851   .1418208    -2.67   0.008    -.6560547   -.1001156
+         18  |  -.5264715   .1480108    -3.56   0.000    -.8165736   -.2363694
+         19  |  -.2754102   .1482961    -1.86   0.063    -.5660714    .0152509
+         20  |  -.9035867   .1447615    -6.24   0.000     -1.18732   -.6198533
+         21  |  -.9024803   .1506379    -5.99   0.000    -1.197731   -.6072292
+         22  |  -.3186769   .1918527    -1.66   0.097    -.6947094    .0573557
+         23  |  -1.514188   .1452548   -10.42   0.000    -1.798888   -1.229488
+         24  |  -1.126796   .1639643    -6.87   0.000    -1.448167   -.8054247
+         25  |  -.2575749   .1511555    -1.70   0.088    -.5538407    .0386909
+         26  |  -.7473184   .1618936    -4.62   0.000    -1.064631    -.430006
+         27  |  -.9824991    .161647    -6.08   0.000    -1.299328     -.66567
+         28  |  -.0581273   .2574815    -0.23   0.821    -.5627926    .4465379
+         29  |  -.7141366   .1723948    -4.14   0.000    -1.052032   -.3762417
+         30  |  -.2627585   .1630539    -1.61   0.107    -.5823452    .0568281
+         31  |   -1.02448   .2103563    -4.87   0.000    -1.436779     -.61218
+         32  |  -1.294365   .1810248    -7.15   0.000    -1.649174   -.9395551
+         33  |  -2.032797   .4873267    -4.17   0.000     -2.98796   -1.077634
+         34  |  -1.156736   .2657476    -4.35   0.000    -1.677603   -.6358693
+         35  |  -1.148718   .2491183    -4.61   0.000    -1.636991   -.6604443
+         36  |  -.6865496   .2817998    -2.44   0.015    -1.238879   -.1342203
+         37  |   -.719098   .3352053    -2.15   0.032    -1.376102   -.0620935
+         38  |  -1.516158   .6110357    -2.48   0.013    -2.713792   -.3185246
+         39  |  -.2306333   .5721846    -0.40   0.687    -1.352119     .890852
+         40  |  -2.011036   .5363972    -3.75   0.000    -3.062378   -.9596947
+         41  |  -2.060869   .4298935    -4.79   0.000    -2.903463   -1.218275
+         42  |  -2.138048   .3013983    -7.09   0.000    -2.728791   -1.547306
+         44  |  -1.882944   .3196202    -5.89   0.000    -2.509402   -1.256487
+         45  |  -1.490782   .3322472    -4.49   0.000    -2.141988   -.8395752
+         46  |   -.325404   .5405585    -0.60   0.547    -1.384902     .734094
+         47  |  -1.662342   .3688829    -4.51   0.000    -2.385355   -.9393295
+         48  |  -1.233027   .4194483    -2.94   0.003    -2.055148   -.4109055
+         49  |  -.9120144   .3137382    -2.91   0.004    -1.526943   -.2970856
+         50  |  -2.261252   .4946624    -4.57   0.000    -3.230794   -1.291711
+         51  |  -2.059273   .5360439    -3.84   0.000    -3.109922   -1.008623
+         54  |  -1.067771   .2898016    -3.68   0.000    -1.635784   -.4997584
+         58  |  -.9242246   .4681272    -1.97   0.048    -1.841757   -.0066924
+         59  |  -1.199516   .3497135    -3.43   0.001    -1.884957   -.5140754
+         60  |    .150428   .6770982     0.22   0.824    -1.176689    1.477545
+         62  |  -2.214687   .5457439    -4.06   0.000    -3.284349   -1.145026
+         63  |  -1.598013   .5101379    -3.13   0.002    -2.597886   -.5981393
+         65  |  -1.247351   .2602093    -4.79   0.000    -1.757362   -.7373388
+         66  |  -1.259943   .3463536    -3.64   0.000    -1.938798   -.5810878
+         67  |  -1.496391   .3357735    -4.46   0.000     -2.15451   -.8382733
+         68  |  -1.113657   .3205072    -3.47   0.001    -1.741853   -.4854607
+             |
+       _cons |   12.63691   .4126662    30.62   0.000     11.82808    13.44574
+------------------------------------------------------------------------------
+
+. outreg2 using "$outcomes\regBMI", replace label bdec(2) sdec(2) rdec(2) keep(ln_income diffXknot sex
+>  age age2 age3 URBAN2011)
+dir : seeout
+
+. 
+. // The slope change is given by the coefficient on the diffXknot. It is positive and statistically s
+> ignificant 
+. // that displays a stronger income effect at higher income values 
+. 
+. replace height_final = . if height_final > 176 & adults == 1 
+(1,109 real changes made, 1,109 to missing)
+
+. // In order to check the robustness of the results, I check for slope change using another nutrition
+> al measure (height). 
+. // In the following steps, I run the same test and examine the relationship between height and incom
+> e. 
+. 
+. *My regression specification is: height = beta_0 + beta_1(ln_income) + beta_2(ln_income - threshold)
+>  + beta_3(x'_i) + e 
+. 
+. local threshold = 0.05 // Starting with an income threshold and then moving up 
+
+. local row = 1          // Starting a counter of rows in a matrix 
+
+. local rss_min = 0 
+
+. matrix B = J(70,7,.)   // Creating a matrix of 70 rows and 8 columns
+
+.  
+. while `threshold' <= 3.50 {
+  2.         
+.         gen income`row' = (ln_income - `threshold') // Generating variable with the difference betwe
+> en ln_income and threshold
+  3.         matrix B[`row', 1] = `threshold'          // Inserting threshold values
+  4.         
+.         qui reg height_final ln_income income`row' sex age age2 age3 URBAN2011 i.ID13 i.DISTID if ad
+> ults == 1 & income`row' >= 0 // Running a regression with ln_income >= threshold 
+  5.         matrix B[`row',2] = e(rss)         // Inserting squared sum of residuals 
+  6.         matrix B[`row',3] = e(N)           // Inserting number of obs 
+  7.         
+.         qui reg height_final ln_income income`row' sex age age2 age3 URBAN2011 i.ID13 i.DISTID if ad
+> ults == 1 & income`row' < 0 // Running a separate regression with ln_income < threshold 
+  8.         matrix B[`row',4] = e(rss)        // Inserting squared sum of residuals 
+  9.         matrix B[`row',5] = e(N)          // Inserting number of obs 
+ 10.         
+.         matrix B[`row',6] = B[`row',2] + B[`row',4]    // Total squared sum of residuals from two re
+> gresssions 
+ 11.         matrix B[`row',7] = B[`row',3] + B[`row',5]    // Total number of obs from two regression
+> s 
+ 12.         
+.         if `row' == 1 {                         // Stating the first sum of squared residuals as the
+>  minimum 
+ 13.                 local rss_min = A[`row',6] 
+ 14.         }
+ 15.         
+.         else {                                 // for every other row, I run a check 
+ 16.                 if B[`row',6] < `rss_min' {         // whether the rss is less than the first one
+> , 
+ 17.                         local rss_min = B[`row',6]      // if it is, then I state that as the low
+> est one 
+ 18.                 }
+ 19.         }       
+ 20.         local threshold = `threshold' + 0.05
+ 21.         local row = `row' + 1
+ 22. } 
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+(150,827 missing values generated)
+
+. 
+. matrix min_rss_2 = J(70,1,`rss_min')         // Creating a matrix of 70 rows and 1 column with minim
+> um rss 
+
+. mat D = diag(B[1...,7]) * (B[1...,6] - min_rss_2) * (1/`rss_min')  // Generating the F-type statisti
+> c (rss_i - min_rss)/min_rss
+
+. mat B = B, D        // Adding matrix C to matrix A 
+
+. 
+. //The income threshold at which the sum of squared residuals minimizes is 1.7 
+. 
+. *Generating variables from matrix 
+. svmat B
+
+. 
+. *Renaming variables created from the matrix 
+. rename B8 ftype_1
+
+. rename B1 thresholds_1
+
+. 
+. *Graph of the F-type statistic and income thresholds 
+. line ftype_1 thresholds_1, title("") xtitle("income threshold") ytitle("F-type statistic") lcolor(re
+> d) plotr(fcolor(white))
+
+. gr export "$outcomes/bmi_income_4.eps", as(eps) preview(off) replace
+(file C:\Users\18575\Desktop\IHDS\Output/bmi_income_4.eps written in EPS format)
+
+. !epstopdf "$outcomes/bmi_income_4.eps" 
+
+. 
+. *Creating variables for estimation
+. gen knot2 = 1 if ln_income >= 1.7 
+(71,525 missing values generated)
+
+. replace knot2 = 0 if ln_income < 1.7 & ln_income != .
+(71,525 real changes made)
+
+. 
+. *Using the income threshold at which the break occurs to generate a new variable which states the sl
+> ope change 
+. gen diff2 = ln_income - 1.7
+(150,827 missing values generated)
+
+. gen diff2Xknot = diff2*knot2      // generating variable indicating the measure of slope change 
+(150,827 missing values generated)
+
+. 
+. *Running a regression with the income threshold value found in the loop 
+. reg height_final ln_income diff2Xknot sex age age2 age3 URBAN2011 i.ID13 i.DISTID if adults ==1 
+
+      Source |       SS           df       MS      Number of obs   =    55,861
+-------------+----------------------------------   F(72, 55788)    =    344.36
+       Model |  1681711.81        72  23357.1084   Prob > F        =    0.0000
+    Residual |  3783995.05    55,788  67.8281181   R-squared       =    0.3077
+-------------+----------------------------------   Adj R-squared   =    0.3068
+       Total |  5465706.86    55,860  97.8465245   Root MSE        =    8.2358
+
+------------------------------------------------------------------------------
+height_final |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+   ln_income |   .8949583   .0826805    10.82   0.000     .7329039    1.057013
+  diff2Xknot |   .3092663   .1400275     2.21   0.027     .0348115    .5837211
+         sex |  -10.94017    .072232  -151.46   0.000    -11.08174   -10.79859
+         age |   .1194276   .0568715     2.10   0.036     .0079592    .2308961
+        age2 |  -.0022996   .0012197    -1.89   0.059    -.0046901     .000091
+        age3 |   6.26e-06   8.25e-06     0.76   0.448    -9.91e-06    .0000224
+   URBAN2011 |  -.1626971    .079942    -2.04   0.042    -.3193839   -.0060104
+             |
+        ID13 |
+        OBC  |  -.2691486   .1730032    -1.56   0.120    -.6082359    .0699388
+         SC  |  -.7275751   .1670587    -4.36   0.000    -1.055011    -.400139
+         ST  |  -1.507307   .1777057    -8.48   0.000    -1.855612   -1.159003
+      Other  |  -1.939988   .2064296    -9.40   0.000    -2.344591   -1.535385
+          6  |  -1.207341   .3465235    -3.48   0.000     -1.88653   -.5281528
+             |
+      DISTID |
+          1  |  -.6812065   .2795784    -2.44   0.015    -1.229182   -.1332311
+          2  |  -.3829209   .2539445    -1.51   0.132    -.8806538     .114812
+          3  |  -.2194359   .3058531    -0.72   0.473    -.8189099    .3800382
+          4  |    .736543   .2827477     2.60   0.009     .1823557     1.29073
+          5  |   .3000853   .2581991     1.16   0.245    -.2059866    .8061572
+          6  |  -1.578995   .2761218    -5.72   0.000    -2.120196   -1.037795
+          7  |  -.0509245   .2810575    -0.18   0.856    -.6017991    .4999501
+          8  |    .132108   .2761969     0.48   0.632    -.4092398    .6734558
+          9  |  -.2777383   .2746524    -1.01   0.312    -.8160587    .2605821
+         10  |  -.2076303   .2658431    -0.78   0.435    -.7286844    .3134239
+         11  |  -.3669958   .2854265    -1.29   0.199    -.9264337     .192442
+         12  |   -.401701   .2630906    -1.53   0.127    -.9173604    .1139583
+         13  |   .0915782   .2767988     0.33   0.741    -.4509491    .6341056
+         14  |  -.7110722   .2979997    -2.39   0.017    -1.295154   -.1269908
+         15  |   -.219827   .2833626    -0.78   0.438    -.7752196    .3355655
+         16  |  -1.058386   .3036983    -3.48   0.000    -1.653636   -.4631349
+         17  |  -.9337008   .3019623    -3.09   0.002    -1.525549   -.3418527
+         18  |   .5214852   .3146261     1.66   0.097     -.095184    1.138154
+         19  |  -.9578379   .3150999    -3.04   0.002    -1.575436     -.34024
+         20  |   1.175038   .3089638     3.80   0.000     .5694667    1.780609
+         21  |   .4857292   .3203441     1.52   0.129    -.1421473    1.113606
+         22  |  -.5520014   .4085864    -1.35   0.177    -1.352833    .2488307
+         23  |   .3778971   .3093982     1.22   0.222    -.2285254    .9843197
+         24  |  -.5786829   .3490242    -1.66   0.097    -1.262773    .1054068
+         25  |  -2.064927   .3212403    -6.43   0.000     -2.69456   -1.435294
+         26  |  -.2257029   .3444705    -0.66   0.512    -.9008673    .4494615
+         27  |  -.3410355   .3450377    -0.99   0.323    -1.017312    .3352406
+         28  |  -2.423722   .5482079    -4.42   0.000    -3.498213   -1.349231
+         29  |  -.8090319   .3677471    -2.20   0.028    -1.529819   -.0882452
+         30  |  -1.241622   .3474916    -3.57   0.000    -1.922707   -.5605358
+         31  |  -.8232463   .4458219    -1.85   0.065     -1.69706    .0505675
+         32  |  -1.184265   .3847627    -3.08   0.002    -1.938402   -.4301275
+         33  |   .2886327   1.029608     0.28   0.779    -1.729406    2.306672
+         34  |  -1.578124   .5621555    -2.81   0.005    -2.679952   -.4762955
+         35  |   -.533081   .5317786    -1.00   0.316     -1.57537    .5092085
+         36  |   .4102022   .5996174     0.68   0.494    -.7650519    1.585456
+         37  |   1.782124   .7151684     2.49   0.013     .3803897    3.183859
+         38  |   .1814077   1.290758     0.14   0.888    -2.348487    2.711302
+         39  |   1.991601   1.221111     1.63   0.103     -.401784    4.384985
+         40  |  -1.021829   1.133199    -0.90   0.367    -3.242906    1.199247
+         41  |   .8865546    .913483     0.97   0.332     -.903878    2.676987
+         42  |  -.3440251   .6373845    -0.54   0.589    -1.593303    .9052526
+         44  |  -.2453752   .6757952    -0.36   0.717    -1.569938    1.079188
+         45  |    -2.5106   .7024044    -3.57   0.000    -3.887317   -1.133883
+         46  |  -.2535959   1.122135    -0.23   0.821    -2.452987    1.945795
+         47  |  -2.449225    .779659    -3.14   0.002    -3.977362   -.9210886
+         48  |  -.6685496   .8863549    -0.75   0.451    -2.405811    1.068712
+         49  |  -1.957122   .6650854    -2.94   0.003    -3.260694   -.6535502
+         50  |  -2.026599   1.045101    -1.94   0.052    -4.075003    .0218053
+         51  |  -3.148893   1.113185    -2.83   0.005    -5.330742   -.9670431
+         54  |  -1.192357   .6115861    -1.95   0.051     -2.39107    .0063555
+         58  |   -2.10031   .9891073    -2.12   0.034    -4.038966   -.1616527
+         59  |  -1.668889   .7442902    -2.24   0.025    -3.127702    -.210075
+         60  |  -4.767346   1.430215    -3.33   0.001    -7.570576   -1.964116
+         62  |  -.2694845   1.152917    -0.23   0.815    -2.529209     1.99024
+         63  |  -2.804951   1.086447    -2.58   0.010    -4.934394   -.6755072
+         65  |  -1.430522   .5531591    -2.59   0.010    -2.514718   -.3463269
+         66  |  -1.084259   .7345451    -1.48   0.140    -2.523972    .3554542
+         67  |  -3.905176   .7098238    -5.50   0.000    -5.296436   -2.513917
+         68  |  -1.704264   .6776526    -2.51   0.012    -3.032467   -.3760604
+             |
+       _cons |    171.968   .8803303   195.34   0.000     170.2425    173.6934
+------------------------------------------------------------------------------
+
+. outreg2 using "$outcomes\regBMI", append tex label bdec(2) sdec(2) rdec(2) keep(ln_income diffXknot 
+> sex age age2 age3 URBAN2011)
+C:\Users\18575\Desktop\IHDS\Output\regBMI.tex
+dir : seeout
+
+. 
+. // The coefficient on diff2Xknot shows the slope change. It is positive and statistically significan
+> t. 
+. 
+. // We find evidence for a slope change between household income and nutritional status. After choosi
+> ng a specific income threshold 
+. // and running a regression for the same, we find that the coefficient on the slope change is positi
+> ve and statistically significant. 
+. 
+end of do-file
+
+. 
+. *****************Closing the log file*******************************
+. 
+. cap log close 
