@@ -14,15 +14,16 @@ Therefore, although nutritional status (BMI) is improving in current income acro
 Objective: My objective is to test for a slope change at an unknown income threshold using regression kink design and nationally representative household survey data from India (IHDS).
 
 ## Data:
-The directory “IHDS\Data” contains the original data (IHDS 2004-05, IHDS 2011-12) and a Linking file to link the two rounds provided by IHDS.
-The directory “IHDS\Final_Data” contains the datasets used for analysis
 The original dataset is by India Human Development Survey: a nationally representative panel survey in India from the years 2004-05 and 2011-12. Data was downloaded from here https://www.icpsr.umich.edu/web/DSDR/studies/22626 and here https://www.icpsr.umich.edu/web/DSDR/studies/36151
 
+The directory "\Data” contains the original data (IHDS 2004-05, IHDS 2011-12) and a Linking file to link the two rounds provided by IHDS.
+The directory “IHDS\Final_Data” contains the datasets used for analysis
+
 ## Coding:
-The master do-file in IHDS\Do-file\Master.do runs the cleaning and analysis files.
+The master do-file in Do Files\Master.do runs the cleaning and analysis files.
 
 ## Output:
-The regression output and graphs produced in LaTex can be found in IHDS\Output\Final_Output
+The regression output and graphs produced in LaTex can be found in Final_Output.pdf
 
 
 
