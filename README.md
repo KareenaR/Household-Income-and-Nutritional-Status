@@ -3,7 +3,7 @@ Testing for a slope change across an unknown income threshold using Regression K
 
 Written by: Kareena Satia
 
-# Project Description: 
+## Project Description: 
 My project is motivated by the working paper "Economic Development, The Nutrition Trap and Cardiometabolic Disease" by Nancy Luke, Kaivan Munshi, Anu Mary Oommen and Swapnil Singh (2020).
 
 In developing countries, there are following two types of individuals:
@@ -13,21 +13,21 @@ Therefore, although nutritional status (BMI) is improving in current income acro
 
 Objective: My objective is to test for a slope change at an unknown income threshold using regression kink design and nationally representative household survey data from India (IHDS).
 
-# Data:
+## Data:
 The directory “IHDS\Data” contains the original data (IHDS 2004-05, IHDS 2011-12) and a Linking file to link the two rounds provided by IHDS.
 The directory “IHDS\Final_Data” contains the datasets used for analysis
 The original dataset is by India Human Development Survey: a nationally representative panel survey in India from the years 2004-05 and 2011-12. Data was downloaded from here https://www.icpsr.umich.edu/web/DSDR/studies/22626 and here https://www.icpsr.umich.edu/web/DSDR/studies/36151
 
-# Coding:
+## Coding:
 The master do-file in IHDS\Do-file\Master.do runs the cleaning and analysis files.
 
-# Output:
+## Output:
 The regression output and graphs produced in LaTex can be found in IHDS\Output\Final_Output
 
 
 
 
-## Acknowledgment: 
+### Acknowledgment: 
 
 I thank Dr. Swapnil Singh (one of the co-authors of the paper: "Economic Development, The Nutrition
 Trap and Cardiometabolic Disease") for his guidance and help.
