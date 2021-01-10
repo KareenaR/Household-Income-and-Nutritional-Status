@@ -27,7 +27,7 @@ The regression output and graphs produced in LaTex can be found in IHDS\Output\F
 
 
 
-
+## Acknowledgment: 
 
 I thank Dr. Swapnil Singh (one of the co-authors of the paper: "Economic Development, The Nutrition
 Trap and Cardiometabolic Disease") for his guidance and help.
