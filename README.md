@@ -16,8 +16,10 @@ Objective: My objective is to test for a slope change at an unknown income thres
 ## Data:
 The original dataset is by India Human Development Survey: a nationally representative panel survey in India from the years 2004-05 and 2011-12. Data was downloaded from here https://www.icpsr.umich.edu/web/DSDR/studies/22626 and here https://www.icpsr.umich.edu/web/DSDR/studies/36151
 
-The directory "\Data” contains the original data (IHDS 2004-05, IHDS 2011-12) and a Linking file to link the two rounds provided by IHDS.
-The directory “IHDS\Final_Data” contains the datasets used for analysis
+For 2005, I have used DS0001 folder which contains the individual dataset and DS0002 folder which contains the household dataset. 
+For 2012, I have used DS0001 folder which contains the individual dataset, DS0002 folder which contains the household dataset and DS0004 which contains the birth history dataset. 
+
+In addition to these, I have also used a Linking file to link the two rounds of survey data. The data can be downloaded from here: https://ihds.umd.edu/data/data-download
 
 ## Coding:
 The master do-file in Do Files\Master.do runs the cleaning and analysis files.
